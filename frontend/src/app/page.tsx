@@ -10,7 +10,7 @@ interface Message {
 }
 
 export default function Home() {
-  const is_authenticated = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -19,7 +19,7 @@ export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
-    if (!is_authenticated) return;
+    if (!isAuthenticated) return;
 
     const fetchMessages = async () => {
       try {
@@ -45,7 +45,7 @@ export default function Home() {
     };
 
     fetchMessages();
-  }, [is_authenticated, router, API_URL]);
+  }, [isAuthenticated, router, API_URL]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -85,12 +85,16 @@ export default function Home() {
     router.push('/login');
   };
 
-  if (!is_authenticated) {
+  if (isLoading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
         <p>Loading...</p>
       </main>
     );
+  }
+
+  if (!isAuthenticated) {
+    return null; // or a redirect component
   }
 
   return (

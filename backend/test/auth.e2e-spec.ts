@@ -68,4 +68,13 @@ describe('AuthController (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
   });
+
+  it('should validate a token', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/auth/validate')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body).toHaveProperty('valid', true);
+  });
 });
