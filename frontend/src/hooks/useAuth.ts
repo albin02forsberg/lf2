@@ -31,7 +31,8 @@ export function useAuth() {
           setIsAuthenticated(false);
           router.push('/login');
         }
-      } catch (error) {
+      } catch (_error) {
+        console.log(_error);
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         router.push('/login');

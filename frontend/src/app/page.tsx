@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import LandingPage from '@/components/page';
 
 interface Message {
   id: number;
@@ -94,7 +95,7 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return null; // or a redirect component
+    return <LandingPage />;
   }
 
   return (
