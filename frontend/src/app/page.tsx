@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 interface Message {
   id: number;
@@ -8,6 +10,8 @@ interface Message {
 }
 
 export default function Home() {
+  const is_authenticated = useAuth();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -15,9 +19,21 @@ export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
+    if (!is_authenticated) return;
+
     const fetchMessages = async () => {
       try {
-        const response = await fetch(`${API_URL}/messages`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/messages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          router.push('/login');
+          return;
+        }
+
         if (!response.ok) {
           throw new Error('Failed to fetch messages');
         }
@@ -29,20 +45,28 @@ export default function Home() {
     };
 
     fetchMessages();
-  }, [API_URL]);
+  }, [is_authenticated, router, API_URL]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ text: newMessage }),
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        router.push('/login');
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to create message');
@@ -56,13 +80,34 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.push('/login');
+  };
+
+  if (!is_authenticated) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <p>Loading...</p>
+      </main>
+    );
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-8">Message Board</h1>
-
-      {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
-
+    <main className="flex min-h-screen flex-col items-center p-24">
       <div className="w-full max-w-md">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Message Board</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </div>
+
+        {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
+
         <form onSubmit={handleSubmit} className="mb-8">
           <div className="flex gap-2">
             <input
