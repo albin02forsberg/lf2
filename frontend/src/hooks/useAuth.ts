@@ -4,17 +4,44 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function useAuth() {
-  const [is_authenticated, set_is_authenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-    } else {
-      set_is_authenticated(true);
-    }
-  }, [router]);
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        router.push('/login');
+        return;
+      }
 
-  return is_authenticated;
+      try {
+        const response = await fetch(`${API_URL}/auth/validate`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          router.push('/login');
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateToken();
+  }, [router, API_URL]);
+
+  return { isAuthenticated, isLoading };
 }

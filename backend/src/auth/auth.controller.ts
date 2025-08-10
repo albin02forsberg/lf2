@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UnauthorizedException, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, UseGuards, Request, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -30,5 +30,11 @@ export class AuthController {
       throw new UnauthorizedException();
     }
     return this.authService.login(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('validate')
+  validateToken(@Request() req) {
+    return { valid: true, user: req.user };
   }
 }
