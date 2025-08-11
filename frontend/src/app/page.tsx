@@ -2,8 +2,10 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/contexts/TenantContext';
 import { useRouter } from 'next/navigation';
 import LandingPage from '@/components/page';
+import { TenantSwitcher } from '@/components/TenantSwitcher';
 
 interface Message {
   id: number;
@@ -12,6 +14,7 @@ interface Message {
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { currentTenant } = useTenant();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -20,13 +23,19 @@ export default function Home() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !currentTenant) {
+      setMessages([]);
+      return;
+    }
 
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/messages`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'X-Tenant-ID': String(currentTenant.id),
+          },
         });
 
         if (response.status === 401) {
@@ -46,11 +55,11 @@ export default function Home() {
     };
 
     fetchMessages();
-  }, [isAuthenticated, router, API_URL]);
+  }, [isAuthenticated, router, API_URL, currentTenant]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !currentTenant) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -59,6 +68,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          'X-Tenant-ID': String(currentTenant.id),
         },
         body: JSON.stringify({ text: newMessage }),
       });
@@ -101,14 +111,22 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
       <div className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Message Board</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-          >
-            Logout
-          </button>
+        <div className="flex justify-between items-center mb-8 w-full">
+          <div>
+            <h1 className="text-4xl font-bold">Message Board</h1>
+            {currentTenant && (
+              <p className="text-lg text-gray-500">{currentTenant.name}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            <TenantSwitcher />
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}

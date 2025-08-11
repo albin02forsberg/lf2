@@ -10,12 +10,12 @@ export class AppService {
     private messagesRepository: Repository<Message>,
   ) {}
 
-  findAll(): Promise<Message[]> {
-    return this.messagesRepository.find();
+  findAll(tenantId: number): Promise<Message[]> {
+    return this.messagesRepository.find({ where: { tenantId } });
   }
 
-  async create(text: string): Promise<Message> {
-    const newMessage = this.messagesRepository.create({ text });
+  async create(text: string, tenantId: number): Promise<Message> {
+    const newMessage = this.messagesRepository.create({ text, tenantId });
     await this.messagesRepository.save(newMessage);
     return newMessage;
   }

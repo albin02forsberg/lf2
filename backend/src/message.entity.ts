@@ -7,4 +7,7 @@ export class Message {
 
   @Column()
   text: string;
+
+  @Column()
+  tenantId: number;
 }
