@@ -1,0 +1,3 @@
+- If you fail to test the code, stop and continue
+- Use tailwindcss for style
+- Create and reuse components, modify a bit if needed
