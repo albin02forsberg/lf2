@@ -2,6 +2,7 @@ import { Controller, Post, Body, UnauthorizedException, UseGuards, Request, Get 
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Public } from './public.decorator';
 
 @Controller('api/auth')
 export class AuthController {
@@ -9,8 +10,6 @@ export class AuthController {
     private authService: AuthService,
     private usersService: UsersService,
   ) {}
-
-import { Public } from './public.decorator';
   @Public()
   @Post('signup')
   async signup(@Body() body) {

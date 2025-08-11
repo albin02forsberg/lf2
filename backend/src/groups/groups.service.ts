@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Group } from '../group.entity';
@@ -23,11 +23,15 @@ export class GroupsService {
     });
   }
 
-  findOne(id: number, tenantId: number): Promise<Group> {
-    return this.groupsRepository.findOne({
+  async findOne(id: number, tenantId: number): Promise<Group> {
+    const group = await this.groupsRepository.findOne({
       where: { id, tenantId },
       relations: ['roles'],
     });
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+    return group;
   }
 
   async create(
@@ -76,7 +80,16 @@ export class GroupsService {
       where: { id: userId },
       relations: ['groups'],
     });
-    user.groups.push(group);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!user.groups) {
+      user.groups = [];
+    }
+    const alreadyInGroup = user.groups.some((g) => g.id === group.id);
+    if (!alreadyInGroup) {
+      user.groups.push(group);
+    }
     return this.usersRepository.save(user);
   }
 
@@ -89,6 +102,12 @@ export class GroupsService {
       where: { id: userId },
       relations: ['groups'],
     });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!user.groups) {
+      user.groups = [];
+    }
     user.groups = user.groups.filter((g) => g.id !== groupId);
     return this.usersRepository.save(user);
   }
