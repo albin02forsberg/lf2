@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/contexts/TenantContext';
 import { useRouter } from 'next/navigation';
 import LandingPage from '@/components/page';
-import { TenantSwitcher } from '@/components/TenantSwitcher';
 
 interface Message {
   id: number;
@@ -13,7 +12,7 @@ interface Message {
 }
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { currentTenant } = useTenant();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -39,6 +38,8 @@ export default function Home() {
         });
 
         if (response.status === 401) {
+          // The logout logic in useAuth will handle the redirect.
+          // For now, to avoid a full auth state refactor, we'll leave this manual redirect.
           localStorage.removeItem('token');
           router.push('/login');
           return;
@@ -91,76 +92,51 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/login');
-  };
-
-  if (isLoading) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <p>Loading...</p>
-      </main>
-    );
-  }
-
   if (!isAuthenticated) {
     return <LandingPage />;
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
-      <div className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-8 w-full">
-          <div>
-            <h1 className="text-4xl font-bold">Message Board</h1>
-            {currentTenant && (
-              <p className="text-lg text-gray-500">{currentTenant.name}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <TenantSwitcher />
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
-
-        <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Write a new message..."
-              className="flex-grow p-2 border border-gray-300 rounded-md text-black"
-            />
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            >
-              Post
-            </button>
-          </div>
-        </form>
-
-        <div className="space-y-4">
-          {messages.length > 0 ? (
-            messages.map((message) => (
-              <div key={message.id} className="p-4 bg-gray-100 rounded-md shadow">
-                <p className="text-gray-800">{message.text}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No messages yet. Be the first to post!</p>
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-8 w-full">
+        <div>
+          <h1 className="text-4xl font-bold">Message Board</h1>
+          {currentTenant && (
+            <p className="text-lg text-gray-500">{currentTenant.name}</p>
           )}
         </div>
       </div>
-    </main>
+      {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
+
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Write a new message..."
+            className="flex-grow p-2 border border-gray-300 rounded-md text-black"
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Post
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-4">
+        {messages.length > 0 ? (
+          messages.map((message) => (
+            <div key={message.id} className="p-4 bg-white rounded-md shadow">
+              <p className="text-gray-800">{message.text}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No messages yet. Be the first to post!</p>
+        )}
+      </div>
+    </div>
   );
 }
