@@ -9,6 +9,12 @@ import { UserTenant } from './user-tenant.entity';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { RolesModule } from './roles/roles.module';
+import { GroupsModule } from './groups/groups.module';
+import { Permission } from './permission.entity';
+import { Role } from './role.entity';
+import { Group } from './group.entity';
 
 @Module({
   imports: [
@@ -21,13 +27,16 @@ import { TenantsModule } from './tenants/tenants.module';
       username: 'postgres',
       password: 'postgres',
       database: 'nest',
-      entities: [Message, User, Tenant, UserTenant],
+      entities: [Message, User, Tenant, UserTenant, Permission, Role, Group],
       synchronize: true, // TODO: disable in production
     }),
     TypeOrmModule.forFeature([Message]),
     AuthModule,
     UsersModule,
     TenantsModule,
+    PermissionsModule,
+    RolesModule,
+    GroupsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

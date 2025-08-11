@@ -10,6 +10,8 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
+import { Public } from './public.decorator';
+  @Public()
   @Post('signup')
   async signup(@Body() body) {
     // NOTE: In a real-world app, you'd want to add validation here
@@ -22,6 +24,7 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  @Public()
   @Post('login')
   async login(@Body() body) {
     const { email, password } = body;
@@ -32,7 +35,6 @@ export class AuthController {
     return this.authService.login(user);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('validate')
   validateToken(@Request() req) {
     return { valid: true, user: req.user };
