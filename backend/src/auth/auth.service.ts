@@ -3,6 +3,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { TenantsService } from '../tenants/tenants.service';
+import { User } from '../user.entity';
 
 @Injectable()
 export class AuthService {
@@ -21,12 +22,27 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
+  async login(user: User) {
     const tenants = await this.tenantsService.getTenantsForUser(user.id);
+    const permissions = new Set<string>();
+    if (user.isAdmin) {
+      permissions.add('*:*');
+    } else {
+      user.groups?.forEach((group) => {
+        group.roles?.forEach((role) => {
+          role.permissions?.forEach((permission) => {
+            permissions.add(permission.name);
+          });
+        });
+      });
+    }
+
     const payload = {
       email: user.email,
       sub: user.id,
       tenants: tenants.map((t) => ({ id: t.id, name: t.name })),
+      permissions: Array.from(permissions),
+      isAdmin: user.isAdmin,
     };
     return {
       access_token: this.jwtService.sign(payload),

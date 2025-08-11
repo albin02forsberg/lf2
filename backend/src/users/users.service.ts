@@ -12,7 +12,16 @@ export class UsersService {
   ) {}
 
   async findOne(email: string): Promise<User | undefined> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      relations: [
+        'groups',
+        'groups.roles',
+        'groups.roles.permissions',
+        'userTenants',
+        'userTenants.tenant',
+      ],
+    });
     return user ?? undefined;
   }
 
@@ -20,6 +29,10 @@ export class UsersService {
     const salt_rounds = 10;
     const password_hash = await bcrypt.hash(password_plaintext, salt_rounds);
     const user = this.usersRepository.create({ email, password_hash });
+    return this.usersRepository.save(user);
+  }
+
+  async save(user: User): Promise<User> {
     return this.usersRepository.save(user);
   }
 }
