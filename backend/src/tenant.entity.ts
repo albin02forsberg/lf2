@@ -2,16 +2,13 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { UserTenant } from './user-tenant.entity';
 
 @Entity()
-export class User {
+export class Tenant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  email: string;
-
   @Column()
-  password_hash: string;
+  name: string;
 
-  @OneToMany(() => UserTenant, (userTenant) => userTenant.user)
+  @OneToMany(() => UserTenant, (userTenant) => userTenant.tenant)
   userTenants: UserTenant[];
 }
