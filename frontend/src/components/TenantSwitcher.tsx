@@ -1,26 +1,24 @@
 'use client';
 
-import { useTenant } from '@/contexts/TenantContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 export const TenantSwitcher = () => {
-  const { tenants, currentTenant, setCurrentTenant } = useTenant();
+  const { tenants, currentTenant, switchTenant } = useAuthContext();
 
-  if (tenants.length === 0) {
-    return <div>No tenants found.</div>;
+  if (!tenants || tenants.length === 0) {
+    return null;
   }
 
   return (
-    <div className="p-4">
-      <label htmlFor="tenant-select" className="mr-2">Current Tenant:</label>
+    <div>
       <select
         id="tenant-select"
         value={currentTenant?.id || ''}
         onChange={(e) => {
           const tenantId = parseInt(e.target.value, 10);
-          const selectedTenant = tenants.find((t) => t.id === tenantId);
-          setCurrentTenant(selectedTenant || null);
+          switchTenant(tenantId);
         }}
-        className="p-2 border rounded"
+        className="p-2 border rounded text-black"
       >
         {tenants.map((tenant) => (
           <option key={tenant.id} value={tenant.id}>

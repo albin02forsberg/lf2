@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useTenant } from '@/contexts/TenantContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import LandingPage from '@/components/page';
 import { TenantSwitcher } from '@/components/TenantSwitcher';
+import { Can } from '@/components/Can';
 
 interface Message {
   id: number;
@@ -13,8 +13,7 @@ interface Message {
 }
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { currentTenant } = useTenant();
+  const { isAuthenticated, isLoading, currentTenant, logout } = useAuthContext();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -39,8 +38,7 @@ export default function Home() {
         });
 
         if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/login');
+          logout();
           return;
         }
 
@@ -55,7 +53,7 @@ export default function Home() {
     };
 
     fetchMessages();
-  }, [isAuthenticated, router, API_URL, currentTenant]);
+  }, [isAuthenticated, router, API_URL, currentTenant, logout]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -74,8 +72,7 @@ export default function Home() {
       });
 
       if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
+        logout();
         return;
       }
 
@@ -89,11 +86,6 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/login');
   };
 
   if (isLoading) {
@@ -120,8 +112,16 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <TenantSwitcher />
+            <Can permission="settings:view">
+              <Link
+                href="/settings"
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Settings
+              </Link>
+            </Can>
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
             >
               Logout
@@ -131,23 +131,25 @@ export default function Home() {
 
         {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Write a new message..."
-              className="flex-grow p-2 border border-gray-300 rounded-md text-black"
-            />
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            >
-              Post
-            </button>
-          </div>
-        </form>
+        <Can permission="messages:create">
+          <form onSubmit={handleSubmit} className="mb-8">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Write a new message..."
+                className="flex-grow p-2 border border-gray-300 rounded-md text-black"
+              />
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              >
+                Post
+              </button>
+            </div>
+          </form>
+        </Can>
 
         <div className="space-y-4">
           {messages.length > 0 ? (
