@@ -14,7 +14,9 @@ import { TenantsModule } from './tenants/tenants.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.POSTGRES_HOST || 'db',
+  // When running the backend locally (outside Docker), use localhost;
+  // override with POSTGRES_HOST=db if running the backend in Docker Compose.
+  host: process.env.POSTGRES_HOST || 'localhost',
       port: 5432,
       username: 'postgres',
       password: 'postgres',

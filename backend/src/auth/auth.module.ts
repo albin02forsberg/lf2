@@ -5,10 +5,12 @@ import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { TenantsModule } from '../tenants/tenants.module';
 
 @Module({
   imports: [
     UsersModule,
+  TenantsModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'SECRET', // TODO: move to config
